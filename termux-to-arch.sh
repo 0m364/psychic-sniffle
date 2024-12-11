@@ -1,53 +1,178 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-echo "Starting Termux Arch Linux Integration Setup..."
+echo "Starting mass installation with pacman. Overwriting all files if needed..."
 
-# Step 1: Update Termux and install essential packages
-echo "Updating Termux and installing essential packages..."
-pkg update -y && pkg upgrade -y
-pkg install -y proot wget curl git clang zsh tar
+# Define the packages (from your provided list)
+packages=(
+    abseil-cpp
+    apt
+    attr
+    attr-glibc
+    bash
+    bash-completion
+    binutils
+    binutils-glibc
+    brotli
+    bzip2
+    bzip2-glibc
+    ca-certificates
+    ca-certificates-glibc
+    clang
+    coreutils
+    coreutils-glibc
+    curl
+    curl-glibc
+    dash
+    debianutils
+    dialog
+    diffutils
+    dos2unix
+    dpkg
+    ed
+    findutils
+    findutils-glibc
+    gawk
+    gcc-libs
+    gdbm
+    gdbm-glibc
+    git
+    glib
+    glib-glibc
+    glibc
+    gnupg
+    gpgme
+    grep
+    grep-glibc
+    gzip
+    inetutils
+    jq
+    krb5
+    krb5-glibc
+    ldns
+    less
+    less-glibc
+    libacl
+    libacl-glibc
+    libandroid-glob
+    libandroid-posix-semaphore
+    libandroid-selinux
+    libandroid-support
+    libandroid-utimes
+    libarchive
+    libassuan
+    libbz2
+    libbz2-glibc
+    libc++
+    libcap
+    libcap-glibc
+    libcap-ng
+    libcap-ng-glibc
+    libcrypt
+    libcurl
+    libcurl-glibc
+    libdb
+    libdb-glibc
+    libdebuginfod
+    libedit
+    libelf
+    libelf-glibc
+    libevent
+    libevent-glibc
+    libexpat
+    libffi
+    libffi-glibc
+    libgcrypt
+    libgirepository
+    libgmp
+    libgnutls
+    libgpg-error
+    libiconv
+    libidn2
+    libidn2-glibc
+    libjansson
+    libksba
+    libllvm
+    liblz4
+    liblz4-glibc
+    liblzma
+    liblzma-glibc
+    libmd
+    libmpfr
+    libnettle
+    libnghttp2
+    libnghttp2-glibc
+    libnghttp3
+    libnpth
+    libpam
+    libpam-glibc
+    libpcre
+    libpcre2
+    libpcre2-glibc
+    libperl
+    libpsl
+    libresolv-wrapper
+    libsqlite
+    libssh2
+    libssh2-glibc
+    libtalloc
+    libtirpc
+    libunbound
+    libunistring
+    libunistring-glibc
+    libunwind
+    libunwind-glibc
+    libuuid
+    libuuid-glibc
+    libverto
+    libverto-glibc
+    libxcrypt
+    libxml2
+    linux-api-headers
+    lsof
+    make
+    nano
+    ncurses
+    ncurses-glibc
+    ncurses-ui-libs
+    ndk-sysroot
+    net-tools
+    oniguruma
+    openssh
+    openssh-sftp-server
+    openssl
+    openssl-glibc
+    pacman
+    patch
+    patchelf
+    pcre
+    pcre2
+    perl
+    pinentry
+    pkg-config
+    procps
+    psmisc
+    readline
+    resolv-conf
+    sed
+    sed-glibc
+    strace
+    tar
+    tar-glibc
+    util-linux
+    util-linux-glibc
+    wget
+    which
+    zlib
+    zlib-glibc
+    zsh
+    zstd
+    zstd-glibc
+)
 
-# Step 2: Install Pacman
-echo "Installing Pacman..."
-wget https://github.com/termux/termux-packages/releases/download/bootstrap/bootstrap-2024.12.10.zip
-unzip bootstrap-2024.12.10.zip -d $HOME/bootstrap
-cd $HOME/bootstrap
-bash setup-bootstrap.sh
-export PATH=$HOME/bootstrap/usr/bin:$PATH
+# Run pacman with overwrite to bypass conflicts
+for package in "${packages[@]}"; do
+    echo "Installing $package with overwrite..."
+    pacman -S --noconfirm --overwrite="*" "$package"
+done
 
-# Step 3: Configure Pacman
-echo "Configuring Pacman..."
-mkdir -p ~/.termux/boot/
-wget -O /data/data/com.termux/files/usr/etc/pacman.conf https://raw.githubusercontent.com/TermuxArch/TermuxArch/main/pacman.conf
-pacman-key --init
-pacman-key --populate archlinuxarm
-
-# Step 4: Install Base System and `base-devel`
-echo "Installing Arch Linux base system and base-devel..."
-pacman -Syu --noconfirm
-pacman -S --noconfirm base base-devel
-
-# Step 5: Handle Filesystem Conflicts
-echo "Resolving filesystem conflicts..."
-find /data/data/com.termux/files/usr/ -name '*.conflict' -exec rm {} \;
-
-# Step 6: Set up Zsh as default shell
-echo "Setting up Zsh..."
-chsh -s $(which zsh)
-cat << 'EOF' > ~/.zshrc
-# Basic Zsh config
-export PATH="/data/data/com.termux/files/usr/bin:$PATH"
-autoload -U compinit && compinit
-EOF
-
-# Step 7: Install Pamac (Optional GUI for Pacman)
-echo "Installing Pamac..."
-pacman -S --noconfirm pamac-aur libpamac
-echo "alias pamac='pamac --no-confirm'" >> ~/.zshrc
-
-# Step 8: Cleanup
-echo "Cleaning up..."
-rm -rf $HOME/bootstrap bootstrap-2024.12.10.zip
-pacman -Sc --noconfirm
-
-echo "Setup Complete! Please restart Termux or run 'zsh' to start your new shell."
+echo "All packages installed with --overwrite='*'. Please check for stability issues!"
