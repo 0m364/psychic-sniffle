@@ -1,32 +1,51 @@
 import scapy.all as scapy
-import os
+import subprocess
 import time
 
 def get_mac_address(ip_address):
     arp_request = scapy.ARP(pdst=ip_address)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast / arp_request
-    answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-    
-    return answered_list[0][1].hwsrc if answered_list else None
+    try:
+        answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+        return answered_list[0][1].hwsrc if answered_list else None
+    except Exception as e:
+        print(f"[!] Error getting MAC address for {ip_address}: {e}")
+        return None
 
 def detect_arp_spoofing():
     # Get the ARP table
     print("[*] Retrieving ARP table...")
-    os.system("arp -a > arp_table.txt")
+    try:
+        arp_output = subprocess.check_output("arp -a", shell=True).decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Failed to get ARP table: {e}")
+        return []
     
-    with open("arp_table.txt", "r") as f:
-        lines = f.readlines()
+    lines = arp_output.splitlines()
     
     # Parse ARP table for IP and MAC addresses
     arp_table = {}
     for line in lines:
         if "(" in line and ")" in line:
-            ip = line.split("(")[1].split(")")[0]
-            mac = line.split()[-1]
-            arp_table[ip] = mac
+            # Unix-style output: ? (192.168.1.1) at 00:11:22:33:44:55 ...
+            try:
+                ip = line.split("(")[1].split(")")[0]
+                mac = line.split()[-1]
+                # Filter out incomplete entries
+                if mac != "<incomplete>":
+                     arp_table[ip] = mac
+            except IndexError:
+                continue
+        else:
+            # Fallback for other formats or skip
+            parts = line.split()
+            if len(parts) >= 2:
+                # Basic heuristic: if it looks like an IP and MAC
+                # This is risky without regex, so we might just skip or log
+                pass
     
-    # Check for multiple MAC addresses associated with the same IP
+    # Check for multiple IPs associated with the same MAC address
     mac_addresses = {}
     for ip, mac in arp_table.items():
         if mac not in mac_addresses:
