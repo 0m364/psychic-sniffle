@@ -1,0 +1,10 @@
+pybluez
+cryptography
+ExifRead
+Pillow
+scapy
+nfcpy
+numpy
+pyrtlsdr
+matplotlib
+geopy
